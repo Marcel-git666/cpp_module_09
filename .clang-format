@@ -1,0 +1,10 @@
+    # Používáme styl založený na LLVM (běžný standard)
+    BasedOnStyle: LLVM
+    # Klíčové nastavení: Velikost odsazení
+    IndentWidth: 4
+    # Další užitečné nastavení: Velikost tabulátoru (pro zarovnání)
+    TabWidth: 4
+    # Používat mezery místo skutečných tabulátorů
+    UseTab: Never
+    # Odsazení case v rámci switche
+    IndentCaseLabels: false
