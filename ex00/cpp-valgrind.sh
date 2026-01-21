@@ -29,51 +29,51 @@ stop_podman() {
 }
 
 # Function to run program normally
+# Accepts arguments as $1
 run_normal() {
-    echo -e "${BLUE}Running program normally...${NC}"
+    local PROG_ARGS="$1"
+    echo -e "${BLUE}Running program normally with args: ${YELLOW}$PROG_ARGS${NC}"
     podman run --rm -it \
         -v "$(pwd):/workspace" \
         -w /workspace \
         gcc:latest \
-        bash -c "make re && ./$EXEC_NAME"
+        bash -c "make re && ./$EXEC_NAME $PROG_ARGS"
 }
 
 # Function to run with Valgrind
+# Accepts arguments as $1
 run_valgrind() {
-    echo -e "${BLUE}Running with Valgrind...${NC}"
+    local PROG_ARGS="$1"
+    echo -e "${BLUE}Running with Valgrind with args: ${YELLOW}$PROG_ARGS${NC}"
     podman run --rm -it \
         -v "$(pwd):/workspace" \
         -w /workspace \
         gcc:latest \
-        bash -c "apt-get update -qq && apt-get install -y -qq valgrind && make re && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$EXEC_NAME"
+        bash -c "apt-get update -qq && apt-get install -y -qq valgrind && make re && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./$EXEC_NAME $PROG_ARGS"
 }
 
 # Show usage
 show_usage() {
-    echo -e "${BLUE}Usage:${NC} $0 [COMMAND] [EXECUTABLE_NAME]"
+    echo -e "${BLUE}Usage:${NC} $0 [COMMAND] [EXECUTABLE_NAME] [ARGS...]"
     echo
     echo "Commands:"
-    echo "  run [name]     - Run executable normally (default: uses NAME from Makefile)"
-    echo "  valgrind [name]- Run with Valgrind"
-    echo "  start          - Start Podman machine"
-    echo "  stop           - Stop Podman machine"
-    echo "  status         - Check Podman status"
-    echo "  help           - Show this help"
+    echo "  run [name] [args]      - Run executable normally"
+    echo "  valgrind [name] [args] - Run with Valgrind"
+    echo "  start                  - Start Podman machine"
+    echo "  stop                   - Stop Podman machine"
+    echo "  status                 - Check Podman status"
+    echo "  help                   - Show this help"
     echo
     echo "Examples:"
-    echo "  $0 run zombie"
-    echo "  $0 valgrind zombie"
-    echo "  $0 stop"
+    echo "  $0 run input.txt           (Uses NAME from Makefile)"
+    echo "  $0 run btc input.txt       (Explicit executable name)"
+    echo "  $0 valgrind input.txt"
 }
 
-# Get executable name from Makefile or argument
-get_exec_name() {
-    if [ -n "$1" ]; then
-        echo "$1"
-    elif [ -f "Makefile" ]; then
+# Helper to get default name from Makefile
+get_makefile_name() {
+    if [ -f "Makefile" ]; then
         grep -E "^NAME\s*=" Makefile | head -1 | cut -d'=' -f2 | tr -d ' '
-    else
-        echo "a.out"
     fi
 }
 
@@ -81,6 +81,37 @@ get_exec_name() {
 check_status() {
     echo -e "${BLUE}Podman machine status:${NC}"
     podman machine list
+}
+
+# Logic to resolve EXEC_NAME and ARGS
+resolve_exec_and_args() {
+    # $1 is the first argument after command (e.g., 'btc' or 'input.txt')
+    # Remaining args are in $@ (excluding $1 if we shift)
+
+    DEFAULT_NAME=$(get_makefile_name)
+
+    if [ -z "$DEFAULT_NAME" ]; then
+        # No Makefile, first arg MUST be exec name
+        if [ -z "$1" ]; then
+            EXEC_NAME="a.out"
+        else
+            EXEC_NAME="$1"
+            shift
+        fi
+    else
+        # Makefile exists
+        if [ "$1" == "$DEFAULT_NAME" ]; then
+            # User explicitly typed the name (e.g. ./script run btc input.txt)
+            EXEC_NAME="$1"
+            shift
+        else
+            # User probably typed just args (e.g. ./script run input.txt)
+            EXEC_NAME="$DEFAULT_NAME"
+        fi
+    fi
+
+    # All remaining arguments are program arguments
+    PROGRAM_ARGS="$@"
 }
 
 # Main
@@ -95,23 +126,30 @@ case "$1" in
         check_status
         ;;
     run)
-        EXEC_NAME=$(get_exec_name "$2")
+        shift # Remove 'run'
+        resolve_exec_and_args "$@"
         echo -e "${BLUE}Executable: $EXEC_NAME${NC}"
         start_podman
-        run_normal
+        run_normal "$PROGRAM_ARGS"
         ;;
     valgrind)
-        EXEC_NAME=$(get_exec_name "$2")
+        shift # Remove 'valgrind'
+        resolve_exec_and_args "$@"
         echo -e "${BLUE}Executable: $EXEC_NAME${NC}"
         start_podman
-        run_valgrind
+        run_valgrind "$PROGRAM_ARGS"
         ;;
     help|--help|-h)
         show_usage
         ;;
     *)
-        EXEC_NAME=$(get_exec_name "$1")
-        echo -e "${BLUE}Executable: $EXEC_NAME${NC}"
+        # Interactive mode
+        DEFAULT_NAME=$(get_makefile_name)
+        [ -z "$DEFAULT_NAME" ] && DEFAULT_NAME="a.out"
+
+        echo -e "${BLUE}Executable detected: $DEFAULT_NAME${NC}"
+        EXEC_NAME=$DEFAULT_NAME
+
         echo -e "${BLUE}How would you like to run?${NC}"
         echo "1) Normal mode"
         echo "2) Valgrind"
@@ -121,12 +159,14 @@ case "$1" in
 
         case $choice in
             1)
+                read -p "Enter arguments (optional): " PROGRAM_ARGS
                 start_podman
-                run_normal
+                run_normal "$PROGRAM_ARGS"
                 ;;
             2)
+                read -p "Enter arguments (optional): " PROGRAM_ARGS
                 start_podman
-                run_valgrind
+                run_valgrind "$PROGRAM_ARGS"
                 ;;
             3)
                 start_podman
