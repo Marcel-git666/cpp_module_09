@@ -1,6 +1,7 @@
 #include "BitcoinExchange.hpp"
 #include <cctype>
 #include <cstddef>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
