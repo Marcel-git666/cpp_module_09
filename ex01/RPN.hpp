@@ -14,6 +14,8 @@ class RPN {
     RPN(const RPN &other);
     RPN &operator=(const RPN &other);
     ~RPN();
+
+    void calculate(std::string input);
 };
 
 #endif
