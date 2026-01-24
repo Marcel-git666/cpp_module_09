@@ -15,47 +15,46 @@ RPN &RPN::operator=(const RPN &other) {
 
 RPN::~RPN() {}
 
-bool isOperator(std::string in) {
-    if (in == "+" || in == "-" || in == "*" || in == "/")
-        return true;
-    return false;
+void RPN::performOp(char op) {
+    if (rpnStack.size() < 2) {
+        throw std::runtime_error("Error");
+    }
+    int right = rpnStack.top();
+    rpnStack.pop();
+    int left = rpnStack.top();
+    rpnStack.pop();
+
+    switch (op) {
+    case '+':
+        rpnStack.push(left + right);
+        break;
+    case '-':
+        rpnStack.push(left - right);
+        break;
+    case '*':
+        rpnStack.push(left * right);
+        break;
+    case '/':
+        if (right == 0)
+            throw std::runtime_error("Error");
+        rpnStack.push(left / right);
+        break;
+    default:
+        throw std::runtime_error("Error");
+    }
 }
 
 void RPN::calculate(std::string input) {
     std::stringstream ss(input);
     std::string token;
     while (ss >> token) {
-        if (isOperator(token)) {
-            if (rpnStack.size() < 2) {
-                throw std::runtime_error("Error");
-            }
-            int right = rpnStack.top();
-            rpnStack.pop();
-            int left = rpnStack.top();
-            rpnStack.pop();
-            switch (token[0]) {
-            case '+':
-                rpnStack.push(left + right);
-                break;
-            case '-':
-                rpnStack.push(left - right);
-                break;
-            case '*':
-                rpnStack.push(left * right);
-                break;
-            case '/':
-                if (right == 0)
-                    throw std::runtime_error("Error");
-                rpnStack.push(left / right);
-                break;
-            default:
-                throw std::runtime_error("Error");
-            }
-        } else if (token.size() == 1 && std::isdigit(token[0])) {
-            int number = std::atoi(token.c_str());
-            rpnStack.push(number);
-        } else {
+        if (token.size() != 1) {
             throw std::runtime_error("Error");
+        }
+        if (std::isdigit(token[0])) {
+            rpnStack.push(token[0] - '0');
+        } else {
+            performOp(token[0]);
         }
     }
     if (rpnStack.size() != 1) {
