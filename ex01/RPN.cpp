@@ -1,21 +1,20 @@
 #include "RPN.hpp"
 #include <iostream>
 #include <sstream>
+#include <stack>
 
 RPN::RPN() {}
 
-RPN::RPN(const RPN &other) : rpnStack(other.rpnStack) {}
+RPN::RPN(const RPN &other) { (void)other; }
 
 RPN &RPN::operator=(const RPN &other) {
-    if (this != &other) {
-        rpnStack = other.rpnStack;
-    }
+    (void)other;
     return *this;
 }
 
 RPN::~RPN() {}
 
-void RPN::performOp(char op) {
+void RPN::performOp(char op, std::stack<int> &rpnStack) {
     if (rpnStack.size() < 2) {
         throw std::runtime_error("Error");
     }
@@ -47,6 +46,7 @@ void RPN::performOp(char op) {
 void RPN::calculate(std::string input) {
     std::stringstream ss(input);
     std::string token;
+    std::stack<int> rpnStack;
     while (ss >> token) {
         if (token.size() != 1) {
             throw std::runtime_error("Error");
@@ -54,7 +54,7 @@ void RPN::calculate(std::string input) {
         if (std::isdigit(token[0])) {
             rpnStack.push(token[0] - '0');
         } else {
-            performOp(token[0]);
+            performOp(token[0], rpnStack);
         }
     }
     if (rpnStack.size() != 1) {

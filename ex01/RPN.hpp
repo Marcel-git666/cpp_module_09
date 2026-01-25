@@ -6,8 +6,7 @@
 
 class RPN {
   private:
-    std::stack<int> rpnStack;
-    void performOp(char op);
+    void performOp(char op, std::stack<int> &rpnStack);
 
   public:
     // Orthodox Canonical Form
