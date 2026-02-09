@@ -1,7 +1,7 @@
 # === Variables ===
 
 # The name of the executable
-NAME = RPN
+NAME = PmergeMe
 
 # The compiler
 CC = c++
@@ -20,11 +20,11 @@ OBJ_DIR = obj
 # === Files ===
 
 # List of all source (.cpp) files
-SRCS = main.cpp RPN.cpp
+SRCS = main.cpp PmergeMe.cpp
 
 
 # List of all header (.hpp) files for dependency tracking
-HEADERS = RPN.hpp \
+HEADERS = PmergeMe.hpp \
 
 
 # Generate the list of object files from the source files
