@@ -33,6 +33,11 @@ class PmergeMe {
     void binaryInsert(Container &c, int val,
                       typename Container::iterator limit);
 
+    template <typename Container>
+    Container generateJacobsthalSequence(int limit);
+
+    template <typename Container> Container buildInsertionSequence(int limit);
+
   public:
     // Orthodox Canonical Form
     PmergeMe();

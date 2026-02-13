@@ -8,6 +8,7 @@
 #include <set>
 #include <stdexcept>
 #include <sys/time.h>
+#include <vector>
 
 PmergeMe::PmergeMe() {}
 
