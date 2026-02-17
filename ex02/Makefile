@@ -65,5 +65,9 @@ fclean: clean
 # Forces a full rebuild of the project
 re: fclean all
 
+debug: CFLAGS += -DDEBUG
+
+debug: re
+
 # Declare targets that are not files
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re debug

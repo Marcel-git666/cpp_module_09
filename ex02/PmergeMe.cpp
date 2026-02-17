@@ -1,32 +1,32 @@
 #include "PmergeMe.hpp"
-
-#include <algorithm>
-#include <cctype>  // std::isdigit
-#include <climits> // INT_MAX
-#include <cstdlib> // std::atol, std::exit
+#include <cctype>
+#include <climits> 
+#include <cstdlib>
 #include <iostream>
 #include <set>
 #include <stdexcept>
 #include <sys/time.h>
-#include <vector>
 
-PmergeMe::PmergeMe() {}
+// Orthodox Canonical Form
+PmergeMe::PmergeMe() : _comparisonCount(0) {}
 
-PmergeMe::PmergeMe(const PmergeMe &other) {
-    _sequenceVector = other._sequenceVector;
-    _sequenceDeque = other._sequenceDeque;
-}
+PmergeMe::PmergeMe(const PmergeMe &other)
+    : _sequenceVector(other._sequenceVector),
+      _sequenceDeque(other._sequenceDeque),
+      _comparisonCount(other._comparisonCount) {}
 
 PmergeMe &PmergeMe::operator=(const PmergeMe &other) {
     if (this != &other) {
         _sequenceVector = other._sequenceVector;
         _sequenceDeque = other._sequenceDeque;
+        _comparisonCount = other._comparisonCount;
     }
     return *this;
 }
 
 PmergeMe::~PmergeMe() {}
 
+// Returns true if the string contains only digit characters.
 bool PmergeMe::isNumeric(const std::string &str) {
     for (size_t i = 0; i < str.size(); i++) {
         if (!isdigit(str[i])) {
@@ -36,6 +36,8 @@ bool PmergeMe::isNumeric(const std::string &str) {
     return true;
 }
 
+// Parses command-line arguments into both containers.
+// Validates: non-empty, numeric, positive, within INT_MAX, no duplicates.
 void PmergeMe::parseInput(int argc, char **argv) {
     if (argc == 1) {
         throw std::runtime_error("Usage: ./PmergeMe 3 5 9 7 4");
@@ -62,6 +64,7 @@ void PmergeMe::parseInput(int argc, char **argv) {
     }
 }
 
+// Main entry point: parses input, sorts with both containers, measures and prints results.
 void PmergeMe::execute(int argc, char **argv) {
     try {
         PmergeMe::parseInput(argc, argv);
@@ -78,7 +81,7 @@ void PmergeMe::execute(int argc, char **argv) {
     gettimeofday(&start_time, NULL);
     typedef std::vector<int> VecType;
     typedef std::vector<PairType> VecPairType;
-
+    _comparisonCount = 0;
     mergeInsertionSort<VecType, VecPairType>(_sequenceVector);
 
     gettimeofday(&end_time, NULL);
@@ -90,15 +93,23 @@ void PmergeMe::execute(int argc, char **argv) {
 
     gettimeofday(&start_time, NULL);
 
+#ifdef DEBUG
+    std::cout << "Comparisons (vector): " << _comparisonCount << "\n";
+#endif
+
     // Sorting 2 comes here;
 
     typedef std::deque<int> DequeType;
     typedef std::deque<PairType> DequePairType;
-
+    _comparisonCount = 0;
     mergeInsertionSort<DequeType, DequePairType>(_sequenceDeque);
     gettimeofday(&end_time, NULL);
     measurement2 = (end_time.tv_sec - start_time.tv_sec) * 1000000;
     measurement2 += end_time.tv_usec - start_time.tv_usec;
+#ifdef DEBUG
+    std::cout << "Comparisons (deque): " << _comparisonCount << "\n";
+#endif
+
     std::cout << "After:  ";
     PmergeMe::printContainer(_sequenceVector);
     std::cout << "\n";

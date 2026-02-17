@@ -9,9 +9,11 @@ class PmergeMe {
   private:
     std::vector<int> _sequenceVector;
     std::deque<int> _sequenceDeque;
+    size_t _comparisonCount;
+
     typedef std::pair<int, int> PairType;
 
-    bool isNumeric(const std::string &str);
+    static bool isNumeric(const std::string &str);
     void parseInput(int argc, char **argv);
 
     template <typename Container>
@@ -21,13 +23,13 @@ class PmergeMe {
     bool extractStraggler(Container &container, int &val);
 
     template <typename Container, typename PairContainer>
-    void mergeInsertionSort(Container &arr);
+    void mergeInsertionSort(Container &arr, int depth = 0);
 
     template <typename Container, typename PairContainer>
     PairContainer createPairs(Container &container, Container &mainChain);
 
     template <typename Container, typename PairContainer>
-    void insertPendingElements(Container &mainChain, PairContainer &pairs);
+    void insertLosers(Container &mainChain, PairContainer &pairs, bool hasStraggler, int straggler);
 
     template <typename Container>
     void binaryInsert(Container &c, int val,
@@ -38,6 +40,15 @@ class PmergeMe {
 
     template <typename Container> Container buildInsertionSequence(int limit);
 
+    struct CountingCompare {
+        size_t *counter;
+        CountingCompare(size_t *c) : counter(c) {}
+        bool operator()(int a, int b) {
+            (*counter)++;
+            return a < b;
+        }
+    };
+
   public:
     // Orthodox Canonical Form
     PmergeMe();
@@ -46,8 +57,6 @@ class PmergeMe {
     ~PmergeMe();
 
     void execute(int argc, char **argv);
-    const std::vector<int> &getVector() const;
-    const std::deque<int> &getDeque() const;
 };
 
 #include "PmergeMe.tpp"
